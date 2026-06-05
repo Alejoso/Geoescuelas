@@ -1,0 +1,83 @@
+# =============================================================================
+#  Orquestación: 4 servicios separados, un proceso por contenedor.
+#    db       -> PostgreSQL (imagen oficial, carga tu seed.sql al iniciar)
+#    backend  -> Laravel corriendo en PHP-FPM
+#    nginx    -> Sirve el backend en :8000 (proxy a php-fpm)
+#    frontend -> Next.js en :3000
+#  Se comunican entre sí por nombre de servicio (DNS interno de la red).
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: laravel
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: app
+    volumes:
+      # Persistencia de los datos
+      - db-data:/var/lib/postgresql/data
+      # Tu dump se ejecuta automáticamente SOLO la primera vez (DB vacía).
+      # Para recargarlo: docker compose down -v && docker compose up
+      - ./docker/db/seed.sql:/docker-entrypoint-initdb.d/seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U laravel -d app"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      DB_CONNECTION: pgsql
+      DB_HOST: db          # <- nombre del servicio, no localhost
+      DB_PORT: 5432
+      DB_DATABASE: app
+      DB_USERNAME: laravel
+      DB_PASSWORD: secret
+    volumes:
+      # El código vive en este volumen para que nginx pueda servir public/.
+      # Se inicializa con lo que el Dockerfile dejó en /var/www.
+      - backend-code:/var/www
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ---------------------------------------------------------------------------
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "8000:8000"        # Laravel accesible en http://localhost:8000
+    volumes:
+      - backend-code:/var/www:ro
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend
+
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # URL que el NAVEGADOR del usuario usa (client-side). Apunta al host.
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+    environment:
+      # URL que el SERVER de Next usa para SSR (server-side), por red interna.
+      API_URL: http://nginx:8000
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+    ports:
+      - "3000:3000"        # Next accesible en http://localhost:3000
+    depends_on:
+      - nginx
+
+volumes:
+  db-data:
+  backend-code:

@@ -75,7 +75,7 @@ export default function Map() {
 
         if (cancelled || !mapInstanceRef.current) return
         
-        schools.forEach(school => {
+        schools.forEach( (school : any) => {
           L.circleMarker(school.coordinates, {
             color: '#f63b3b',
             radius: 6,
