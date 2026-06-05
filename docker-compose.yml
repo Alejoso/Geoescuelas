@@ -66,15 +66,16 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        # URL que el NAVEGADOR del usuario usa (client-side). Apunta al host.
-        NEXT_PUBLIC_API_URL: http://localhost:8000
+        # URL que el NAVEGADOR del usuario usa (client-side).
+        # Se toma del archivo .env (EXTERNAL_IP = IP pública de la VM).
+        NEXT_PUBLIC_API_URL: http://34.123.67.68:8000
     environment:
       # URL que el SERVER de Next usa para SSR (server-side), por red interna.
       API_URL: http://nginx:8000
       PORT: 3000
       HOSTNAME: 0.0.0.0
     ports:
-      - "3000:3000"        # Next accesible en http://localhost:3000
+      - "80:3000"          # Next accesible en http://TU_IP (sin puerto)
     depends_on:
       - nginx
 
