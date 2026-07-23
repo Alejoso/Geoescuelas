@@ -7,7 +7,7 @@ const MASK_PANE = 'barrios-mask'
 // tiles but stays under the barrio outlines and any future markers.
 const MASK_PANE_Z_INDEX = 200
 
-const MASK_FILL_COLOR = '#0b1220'
+const MASK_FILL_COLOR = '#F9F5EC'
 const BARRIOS_LINE_COLOR = '#c2a818'
 const BARRIOS_LINE_WEIGHT = 1.5
 const BARRIOS_HOVER_LINE_WEIGHT = 3
