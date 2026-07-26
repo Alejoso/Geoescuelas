@@ -1,11 +1,13 @@
 import L from 'leaflet'
 import type { BarriosCollection, BarrioProperties } from '@/lib/api/barrios'
 import { buildMaskRings } from './mask'
+import { createHoverLabelController } from './hover-label'
+import type { HoverLabelController } from './hover-label'
 
 const MASK_PANE = 'barrios-mask'
 // Between Leaflet's tilePane (200) and overlayPane (400): the mask covers the
 // tiles but stays under the barrio outlines and any future markers.
-const MASK_PANE_Z_INDEX = 200
+const MASK_PANE_Z_INDEX = 350
 
 const MASK_FILL_COLOR = '#0b1220'
 const BARRIOS_LINE_COLOR = '#c2a818'
@@ -62,86 +64,18 @@ export function createMaskLayer(barrios: BarriosCollection): L.Polygon {
   })
 }
 
-const TOOLTIP_OFFSET: L.PointTuple = [0, -8]
-
-type BarrioHoverController = {
-  activate(layer: L.Path, name: string, latlng: L.LatLng): void
-  refresh(latlng: L.LatLng): void
-  deactivate(layer: L.Path): void
-  clear(): void
-}
-
-function createBarrioHoverController(map: L.Map): BarrioHoverController {
-  const tooltip = L.tooltip({
-    direction: 'top',
-    offset: TOOLTIP_OFFSET,
-    className: 'barrio-tooltip',
-  })
-
-  let activeLayer: L.Path | null = null
-  let activeName = ''
-
-  // Single place that puts the tooltip on screen. Re-adds it when something
-  // outside the controller removed it, which a click does.
-  function showTooltip(latlng: L.LatLng): void {
-    if (!activeName) return
-
-    tooltip.setContent(activeName)
-    tooltip.setLatLng(latlng)
-
-    if (!map.hasLayer(tooltip)) {
-      tooltip.addTo(map)
-    }
-  }
-
-  function clear(): void {
-    if (!activeLayer) return
-
-    activeLayer.setStyle(BARRIOS_IDLE_STYLE)
-    activeLayer = null
-    activeName = ''
-    tooltip.remove()
-  }
-
-  function activate(layer: L.Path, name: string, latlng: L.LatLng): void {
-    if (layer === activeLayer) return
-
-    clear()
-
-    layer.setStyle(BARRIOS_HOVER_STYLE)
-    layer.bringToFront()
-    activeLayer = layer
-    activeName = name
-
-    showTooltip(latlng)
-  }
-
-  // Repositions the tooltip, and restores it if it went missing.
-  function refresh(latlng: L.LatLng): void {
-    if (!activeLayer) return
-    showTooltip(latlng)
-  }
-
-  function deactivate(layer: L.Path): void {
-    if (layer !== activeLayer) return
-    clear()
-  }
-
-  return { activate, refresh, deactivate, clear }
-}
-
-function bindHoverResets(map: L.Map, hover: BarrioHoverController): void {
-  // Panning slides polygons under a stationary cursor, which is where the
-  // browser's own mouseout is least reliable. Covers zoom too.
+export function bindHoverResets(map: L.Map, hover: HoverLabelController): void {
+  // Dragging only, not zooming. A pan slides a different shape under a
+  // stationary cursor, so the highlight must go. Wheel and double-click zoom
+  // anchor on the pointer, so the same shape stays underneath.
   map.on('dragstart', hover.clear)
-  // The cursor can leave the map without ever crossing a polygon edge.
   map.on('mouseout', hover.clear)
 }
 
 function bindBarrioInteraction(
   properties: BarrioProperties | null,
   layer: L.Path,
-  hover: BarrioHoverController,
+  hover: HoverLabelController,
 ): void {
   const name = properties?.nombre ?? ''
 
@@ -154,14 +88,12 @@ function bindBarrioInteraction(
     hover.refresh(event.latlng)
   })
 
-  layer.on('mouseout', () => {
-    hover.deactivate(layer)
-  })
-
-  // Puts the tooltip straight back after the click removed it, instead of
-  // waiting for the next cursor movement to heal it.
   layer.on('click', (event: L.LeafletMouseEvent) => {
     hover.refresh(event.latlng)
+  })
+
+  layer.on('mouseout', () => {
+    hover.deactivate(layer)
   })
 }
 
@@ -169,7 +101,11 @@ export function createBarriosOutlineLayer(
   map: L.Map,
   barrios: BarriosCollection,
 ): L.GeoJSON {
-  const hover = createBarrioHoverController(map)
+  const hover = createHoverLabelController(map, {
+    idleStyle: BARRIOS_IDLE_STYLE,
+    hoverStyle: BARRIOS_HOVER_STYLE,
+    tooltipClassName: 'barrio-tooltip',
+  })
 
   bindHoverResets(map, hover)
 
