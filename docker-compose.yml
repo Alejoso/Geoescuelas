@@ -34,6 +34,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     environment:
+      CORS_ALLOWED_ORIGINS: "http://34.123.67.68,http://localhost:3000"
       APP_ENV: production
       APP_DEBUG: "false"
       DB_CONNECTION: pgsql
@@ -71,7 +72,7 @@ services:
       args:
         # URL que el NAVEGADOR del usuario usa (client-side).
         # Se toma del archivo .env (EXTERNAL_IP = IP pública de la VM).
-        #NEXT_PUBLIC_API_URL: http://34.123.67.68:8000    EN SERVIDOR
+        #NEXT_PUBLIC_API_URL: http://34.123.67.68:8000 # EN SERVIDOR
         NEXT_PUBLIC_API_URL: http://localhost:8000 # LOCAL
     environment:
       # URL que el SERVER de Next usa para SSR (server-side), por red interna.
