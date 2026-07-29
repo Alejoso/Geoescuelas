@@ -14,7 +14,9 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "GeoEscuelas",
-  description: "Holaa",
+  icons: {
+    icon: "/favicon.png"
+  }
 };
 
 export default function RootLayout({

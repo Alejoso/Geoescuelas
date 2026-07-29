@@ -40,7 +40,7 @@ export function searchSchools(schools: School[], rawQuery: string): School[] {
   const matches: RankedSchool[] = []
 
   for (const school of schools) {
-    const name = normalize(school.nombre)
+    const name = normalize(school.nombre_institucion)
 
     if (!matchesAllTokens(name, tokens)) continue
 
@@ -53,7 +53,7 @@ export function searchSchools(schools: School[], rawQuery: string): School[] {
     if (a.startsWithQuery !== b.startsWithQuery) {
       return a.startsWithQuery ? -1 : 1
     }
-    return a.school.nombre.localeCompare(b.school.nombre)
+    return a.school.nombre_institucion.localeCompare(b.school.nombre_institucion)
   })
 
   return matches.slice(0, MAX_RESULTS).map(ranked => ranked.school)

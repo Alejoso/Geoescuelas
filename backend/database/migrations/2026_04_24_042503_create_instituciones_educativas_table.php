@@ -13,32 +13,55 @@ return new class extends Migration
     {
         Schema::create('instituciones_educativas', function (Blueprint $table) {
             $table->id();
-            $table->string('dane', 15);
-            $table->string('consecutivo_dane', 16)->unique();
-            $table->string('nombre');
-            $table->string('tipo_sede');
-            $table->string('zona');
-            $table->string('direccion')->nullable();
-            $table->string('telefono')->nullable();
-            $table->string('estado');
-            $table->text('niveles')->nullable();
-            $table->text('modelos')->nullable();
-            $table->string('grados')->nullable();
-            $table->integer('comuna')->nullable();
-            $table->bigInteger('latitud_raw');
-            $table->bigInteger('longitud_raw');
-            $table->decimal('latitud', 10, 8);
-            $table->decimal('longitud', 11, 8);
  
-            // Métricas
-            $table->integer('numero_docentes_encuestados')->default(0);
-            $table->decimal('indice_global_estudiantes', 4, 2)->default(0);
-            $table->decimal('indice_global_stem', 4, 2)->default(0);
-            $table->decimal('indice_global_docentes', 4, 2)->default(0);
-            $table->decimal('indice_global_ciberseguridad', 4, 2)->default(0);
-            $table->decimal('indice_global_icfes', 4, 2)->default(0);
+            // ─── Identificación ────────────────────────────────────────────
+            $table->string('cod_dane', 16)->unique();
+            $table->string('nombre_institucion');
+            $table->string('sede_principal')->nullable();
+ 
+            // ─── Contacto ──────────────────────────────────────────────────
+            $table->string('correo_institucional')->nullable();
+            $table->string('telefono', 60)->nullable();
+            $table->string('direccion')->nullable();
+ 
+            // ─── Ubicación ─────────────────────────────────────────────────
+            $table->decimal('latitud',  17, 14);
+            $table->decimal('longitud', 17, 14);
+ 
+            // ─── Clasificación ─────────────────────────────────────────────
+            $table->string('calendario', 30)->nullable();
+            $table->string('naturaleza', 60)->nullable();
+            $table->string('sector', 60)->nullable();
+            $table->string('zona', 30)->nullable();
+            $table->string('jornada')->nullable();
+            $table->text('nivel')->nullable();
+ 
+            // ─── Métricas: STEM ────────────────────────────────────────────
+            $table->decimal('indice_global_stem', 5, 2)->nullable();
+            $table->unsignedInteger('docentes_encuestados_stem')->nullable();
+ 
+            // ─── Métricas: competencias docentes ───────────────────────────
+            $table->decimal('indice_global_docentes', 5, 2)->nullable();
+            $table->unsignedInteger('docentes_encuestados_cd')->nullable();
+ 
+            // ─── Métricas: ICFES ───────────────────────────────────────────
+            $table->decimal('indice_global_icfes', 5, 2)->nullable();
+            $table->unsignedInteger('encuestados_icfes')->nullable();
+ 
+            // ─── Métricas: estudiantes ─────────────────────────────────────
+            $table->decimal('indice_global_estudiantes', 5, 2)->nullable();
+            $table->unsignedInteger('encuestados_estudiantes')->nullable();
+ 
+            // ─── Métricas: ciberseguridad ──────────────────────────────────
+            $table->decimal('indice_global_ciberseguridad', 5, 2)->nullable();
+            $table->unsignedInteger('encuestados_ciberseguridad')->nullable();
  
             $table->timestamps();
+ 
+            // ─── Índices para filtros del mapa ─────────────────────────────
+            $table->index('zona');
+            $table->index('sector');
+            $table->index('naturaleza');
         });
     }
 

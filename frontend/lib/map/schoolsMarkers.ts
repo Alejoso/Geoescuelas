@@ -116,7 +116,7 @@ function createSelectionController(
     pin.setLatLng(latlng)
     pin.addTo(map)
 
-    label.setContent(school.nombre)
+    label.setContent(school.nombre_institucion)
     label.setLatLng(latlng)
     label.addTo(map)
   }
@@ -162,7 +162,7 @@ function bindSchoolInteraction(
   const latlng = marker.getLatLng()
 
   marker.on('mouseover', () => {
-    hover.activate(marker, school.nombre, latlng)
+    hover.activate(marker, school.nombre_institucion, latlng)
   })
 
   marker.on('mouseout', () => {

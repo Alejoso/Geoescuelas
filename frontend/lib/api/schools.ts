@@ -1,15 +1,36 @@
 const SCHOOLS_PATH = '/api/school'
 
 export type School = {
-  dane: string
-  nombre: string
+  cod_dane: string
+  nombre_institucion: string
+  sede_principal: string | null
   coordinates: [number, number]
-  numero_docentes_encuestados: number
-  indice_global_estudiantes: number | null
+
+  correo_institucional: string | null
+  telefono: string | null
+  direccion: string | null
+
+  calendario: string | null
+  naturaleza: string | null
+  sector: string | null
+  zona: string | null
+  jornada: string | null
+  nivel: string | null
+
   indice_global_stem: number | null
+  docentes_encuestados_stem: number | null
+
   indice_global_docentes: number | null
-  indice_global_ciberseguridad: number | null
+  docentes_encuestados_cd: number | null
+
   indice_global_icfes: number | null
+  encuestados_icfes: number | null
+
+  indice_global_estudiantes: number | null
+  encuestados_estudiantes: number | null
+
+  indice_global_ciberseguridad: number | null
+  encuestados_ciberseguridad: number | null
 }
 
 export async function fetchSchools(signal?: AbortSignal): Promise<School[]> {

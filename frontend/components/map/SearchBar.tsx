@@ -69,14 +69,14 @@ export default function SearchBar({ schools, onSelect }: SearchBarProps) {
       {hasResults && (
         <ul className="map-search__results">
             {results.map(school => (
-                <li key={school.dane} className="map-search__result">
+                <li key={school.cod_dane} className="map-search__result">
                 <button
                     type="button"
                     className="map-search__result-button"
                     onClick={() => handleSelect(school)}
                 >
-                    <span className="map-search__result-name">{school.nombre}</span>
-                    <span className="map-search__result-dane">DANE · {school.dane}</span>
+                    <span className="map-search__result-name">{school.nombre_institucion}</span>
+                    <span className="map-search__result-dane">DANE · {school.cod_dane}</span>
                 </button>
                 </li>
             ))}

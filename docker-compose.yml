@@ -20,7 +20,8 @@ services:
       - db-data:/var/lib/postgresql/data
       # Tu dump se ejecuta automáticamente SOLO la primera vez (DB vacía).
       # Para recargarlo: docker compose down -v && docker compose up
-      - ./docker/db/seed.sql:/docker-entrypoint-initdb.d/seed.sql:ro
+      - ./docker/db/01-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro 
+      - ./docker/db/02-seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U laravel -d app"]
       interval: 5s
@@ -45,6 +46,8 @@ services:
       # El código vive en este volumen para que nginx pueda servir public/.
       # Se inicializa con lo que el Dockerfile dejó en /var/www.
       - backend-code:/var/www
+      # Para poder poner los xlsx
+      - ./imports:/var/www/storage/imports:ro
     depends_on:
       db:
         condition: service_healthy

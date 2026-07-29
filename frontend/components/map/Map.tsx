@@ -18,6 +18,7 @@ import type { School } from '@/lib/api/schools'
 import SchoolDetailPane from './SchoolDetailPane'
 import { flyToSchool } from '@/lib/map/fly'
 
+import MapLogo from './Logo'
 
 const MEDELLIN_CENTER: L.LatLngTuple = [6.2442, -75.5812]
 const INITIAL_ZOOM = 12
@@ -63,7 +64,7 @@ export default function Map() {
 
     const map = L.map(container , {maxBoundsViscosity: MAX_BOUNDS_VISCOSITY}).setView(MEDELLIN_CENTER, INITIAL_ZOOM)
     mapRef.current = map
-    map.zoomControl.setPosition('topright')
+    map.zoomControl.setPosition('bottomright')
 
     console.log('AT CREATE:', container.clientWidth, container.clientHeight)
 
@@ -160,6 +161,7 @@ export default function Map() {
       <div className={isMapReady ? 'map-loader map-loader--hidden' : 'map-loader'}>
         <div className="map-loader__spinner" aria-label="Cargando mapa" />
       </div>
+      <MapLogo/>
       <SearchBar schools={schools} onSelect={handleSelectSchool} />
       <SchoolDetailPane
         school={selectedSchool}
