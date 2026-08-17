@@ -6,34 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class InstitucionEducativa extends Model
 {
-    protected $table = 'instituciones_educativas';
+    protected $connection = 'supabase';
+    protected $table = 'institution_indicators';
 
-    protected $fillable = [
-        'cod_dane',
-        'nombre_institucion',
-        'sede_principal',
-        'correo_institucional',
-        'telefono',
-        'direccion',
-        'calendario',
-        'naturaleza',
-        'sector',
-        'zona',
-        'jornada',
-        'nivel',
-        'latitud',
-        'longitud',
-        'indice_global_stem',
-        'docentes_encuestados_stem',
-        'indice_global_docentes',
-        'docentes_encuestados_cd',
-        'indice_global_icfes',
-        'encuestados_icfes',
-        'indice_global_estudiantes',
-        'encuestados_estudiantes',
-        'indice_global_ciberseguridad',
-        'encuestados_ciberseguridad',
-    ];
+    protected $primaryKey = 'cod_dane';
+    public $incrementing = false;
+    protected $keyType = 'string';
+    public $timestamps = false;
 
     protected $casts = [
         'latitud'                      => 'decimal:14',
@@ -210,136 +189,5 @@ class InstitucionEducativa extends Model
         $value = $this->getAttribute('encuestados_ciberseguridad');
 
         return $value === null ? null : (int) $value;
-    }
-
-    // ─── Setters: identificación ───────────────────────────────────────────────
-
-    public function setCodDane(string $value): void
-    {
-        $this->setAttribute('cod_dane', trim($value));
-    }
-
-    public function setNombreInstitucion(string $value): void
-    {
-        $this->setAttribute('nombre_institucion', strtoupper(trim($value)));
-    }
-
-    public function setSedePrincipal(?string $value): void
-    {
-        $this->setAttribute('sede_principal', $value === null ? null : trim($value));
-    }
-
-    // ─── Setters: contacto y ubicación ─────────────────────────────────────────
-
-    public function setCorreoInstitucional(?string $value): void
-    {
-        $this->setAttribute('correo_institucional', $value === null ? null : strtolower(trim($value)));
-    }
-
-    public function setTelefono(?string $value): void
-    {
-        $this->setAttribute('telefono', $value === null ? null : trim($value));
-    }
-
-    public function setDireccion(?string $value): void
-    {
-        $this->setAttribute('direccion', $value === null ? null : trim($value));
-    }
-
-    /**
-     * Acepta string para no perder precisión cuando el origen trae 14 decimales.
-     */
-    public function setLatitud(float|string $value): void
-    {
-        $this->setAttribute('latitud', trim((string) $value));
-    }
-
-    public function setLongitud(float|string $value): void
-    {
-        $this->setAttribute('longitud', trim((string) $value));
-    }
-
-    // ─── Setters: clasificación ────────────────────────────────────────────────
-
-    public function setCalendario(?string $value): void
-    {
-        $this->setAttribute('calendario', $value === null ? null : trim($value));
-    }
-
-    public function setNaturaleza(?string $value): void
-    {
-        $this->setAttribute('naturaleza', $value === null ? null : trim($value));
-    }
-
-    public function setSector(?string $value): void
-    {
-        $this->setAttribute('sector', $value === null ? null : trim($value));
-    }
-
-    public function setZona(?string $value): void
-    {
-        $this->setAttribute('zona', $value === null ? null : trim($value));
-    }
-
-    public function setJornada(?string $value): void
-    {
-        $this->setAttribute('jornada', $value === null ? null : trim($value));
-    }
-
-    public function setNivel(?string $value): void
-    {
-        $this->setAttribute('nivel', $value === null ? null : trim($value));
-    }
-
-    // ─── Setters: índices y encuestados ────────────────────────────────────────
-
-    public function setIndiceGlobalStem(?float $value): void
-    {
-        $this->setAttribute('indice_global_stem', $value);
-    }
-
-    public function setDocentesEncuestadosStem(?int $value): void
-    {
-        $this->setAttribute('docentes_encuestados_stem', $value);
-    }
-
-    public function setIndiceGlobalDocentes(?float $value): void
-    {
-        $this->setAttribute('indice_global_docentes', $value);
-    }
-
-    public function setDocentesEncuestadosCd(?int $value): void
-    {
-        $this->setAttribute('docentes_encuestados_cd', $value);
-    }
-
-    public function setIndiceGlobalIcfes(?float $value): void
-    {
-        $this->setAttribute('indice_global_icfes', $value);
-    }
-
-    public function setEncuestadosIcfes(?int $value): void
-    {
-        $this->setAttribute('encuestados_icfes', $value);
-    }
-
-    public function setIndiceGlobalEstudiantes(?float $value): void
-    {
-        $this->setAttribute('indice_global_estudiantes', $value);
-    }
-
-    public function setEncuestadosEstudiantes(?int $value): void
-    {
-        $this->setAttribute('encuestados_estudiantes', $value);
-    }
-
-    public function setIndiceGlobalCiberseguridad(?float $value): void
-    {
-        $this->setAttribute('indice_global_ciberseguridad', $value);
-    }
-
-    public function setEncuestadosCiberseguridad(?int $value): void
-    {
-        $this->setAttribute('encuestados_ciberseguridad', $value);
     }
 }

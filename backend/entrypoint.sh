@@ -20,5 +20,8 @@ php artisan view:clear   || true
 # Permisos por las dudas (el volumen puede traer otros uids)
 chown -R www-data:www-data storage bootstrap/cache || true
 
+echo "[backend] Ejecutando migraciones..."
+php artisan migrate --force --database=pgsql
+
 echo "[backend] Arrancando PHP-FPM..."
 exec php-fpm -F

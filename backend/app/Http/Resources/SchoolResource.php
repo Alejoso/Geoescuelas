@@ -27,12 +27,12 @@ class SchoolResource extends JsonResource
             'docentes_encuestados_stem'    => $this->getDocentesEncuestadosStem(),
             'indice_global_docentes'       => $this->getIndiceGlobalDocentes(),
             'docentes_encuestados_cd'      => $this->getDocentesEncuestadosCd(),
-            'indice_global_icfes'          => $this->getIndiceGlobalIcfes(),
-            'encuestados_icfes'            => $this->getEncuestadosIcfes(),
+            #'indice_global_icfes'          => $this->getIndiceGlobalIcfes(),
+            #'encuestados_icfes'            => $this->getEncuestadosIcfes(),
             'indice_global_estudiantes'    => $this->getIndiceGlobalEstudiantes(),
             'encuestados_estudiantes'      => $this->getEncuestadosEstudiantes(),
-            'indice_global_ciberseguridad' => $this->getIndiceGlobalCiberseguridad(),
-            'encuestados_ciberseguridad'   => $this->getEncuestadosCiberseguridad(),
+            #'indice_global_ciberseguridad' => $this->getIndiceGlobalCiberseguridad(),
+            #'encuestados_ciberseguridad'   => $this->getEncuestadosCiberseguridad(),
         ];
     }
 

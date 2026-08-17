@@ -114,6 +114,20 @@ return [
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
+        'supabase' => [
+            'driver'   => 'pgsql',
+            'host'     => env('SUPABASE_DB_HOST'),
+            'port'     => env('SUPABASE_DB_PORT', '5432'),
+            'database' => env('SUPABASE_DB_DATABASE', 'postgres'),
+            'username' => env('SUPABASE_DB_USERNAME'),
+            'password' => env('SUPABASE_DB_PASSWORD'),
+            'charset'  => 'utf8',
+            'prefix'   => '',
+            'schema'   => 'gold',
+            'search_path' => 'gold',
+            'sslmode'  => 'require',
+        ],
+
     ],
 
     /*
