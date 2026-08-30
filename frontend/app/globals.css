@@ -20,6 +20,16 @@
   }
 }
 
+/* The map fills the viewport and owns wheel events for zoom. Anything that
+   scrolls the document drags the absolutely-positioned pane, search bar and
+   logo out of view, since they are positioned against the map container. */
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -473,4 +483,171 @@ body {
   right: 16px;
   z-index: 1100;
   pointer-events: none;
+}
+
+/*======================== Indicator card detail button ========================*/
+
+.indicator-card__detail {
+  position: relative;
+  display: flex;
+  /* Pushed to the far right of the score row so it lands under the tier. */
+  margin-left: auto;
+  /* The row is baseline-aligned for the score text; an icon has no useful
+     baseline, so it centres against the row instead. */
+  align-self: center;
+  padding: 6px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  transition: color 120ms ease, background-color 120ms ease;
+}
+
+.indicator-card__detail:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #e8f0fe;
+}
+
+.indicator-card__detail::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  z-index: 900;
+  padding: 6px 10px;
+  background: #1a2744;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #e8f0fe;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+}
+
+.indicator-card__detail:hover::after,
+.indicator-card__detail:focus-visible::after {
+  opacity: 1;
+}
+
+/*======================== Survey modal ========================*/
+
+.survey-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(6, 11, 22, 0.6);
+}
+
+.survey-modal {
+  width: 460px;
+  max-width: 100%;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #111827;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.survey-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px;
+  background: #1a2744;
+}
+
+.survey-modal__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #e8f0fe;
+}
+
+.survey-modal__close {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: #7b9cc4;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.survey-modal__close:hover {
+  color: #e8f0fe;
+}
+
+.survey-modal__body {
+  padding: 18px;
+  overflow-y: auto;
+}
+
+.survey-modal__respondents {
+  margin: 0 0 16px;
+  font-size: 14px;
+  color: #9aa4b2;
+}
+
+.survey-modal__status {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+@keyframes survey-modal-backdrop-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes survey-modal-backdrop-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes survey-modal-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes survey-modal-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(10px) scale(0.98); }
+}
+
+.survey-modal--open {
+  animation: survey-modal-backdrop-in 200ms ease-out;
+}
+
+.survey-modal--open .survey-modal {
+  animation: survey-modal-in 220ms ease-out;
+}
+
+.survey-modal--closing {
+  /* `forwards` holds it transparent at the end so it doesn't flash back to
+     visible for the frame before it unmounts. */
+  animation: survey-modal-backdrop-out 180ms ease-in forwards;
+}
+
+.survey-modal--closing .survey-modal {
+  animation: survey-modal-out 180ms ease-in forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .survey-modal--open,
+  .survey-modal--open .survey-modal,
+  .survey-modal--closing,
+  .survey-modal--closing .survey-modal {
+    animation-duration: 1ms;
+  }
 }
