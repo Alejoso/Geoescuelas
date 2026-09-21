@@ -563,8 +563,7 @@ body {
 }
 
 .indicator-card__detail:hover::after,
-.indicator-card__detail:focus-visible::after,
-.ciberseguridad-bar__fill:hover::after {
+.indicator-card__detail:focus-visible::after {
   opacity: 1;
 }
 
@@ -778,6 +777,16 @@ body {
   text-align: right;
 }
 
+.ciberseguridad-bar__percent {
+  color: #6b7280;
+}
+
+.ciberseguridad-fuente__percent {
+  font-size: 13px;
+  font-weight: 400;
+  color: #9aa4b2;
+}
+
 /*======================== Saber 11 detail ========================*/
 
 .saber11-stats {
@@ -821,3 +830,58 @@ body {
   color: #e8f0fe;
   text-align: center;
 }
+
+.saber11-incorrectas-section {
+  margin-top: 10px;
+}
+
+.saber11-area-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.saber11-area__name {
+  font-size: 15px;
+}
+
+.saber11-area-table {
+  width: fit-content;
+  margin: 4px auto 0;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.saber11-area-table th,
+.saber11-area-table td {
+  padding: 5px 0 7px 32px;
+  text-align: right;
+}
+
+.saber11-area-table th:first-child,
+.saber11-area-table td:first-child {
+  padding-left: 0;
+}
+
+.saber11-area-table th {
+  font-size: 13px;
+  font-weight: 600;
+  color: #9aa4b2;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.saber11-area-table__area-header {
+  text-align: left;
+}
+
+.saber11-area-table td {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.saber11-area-table__area {
+  text-align: left;
+  color: #fff;
+}
+

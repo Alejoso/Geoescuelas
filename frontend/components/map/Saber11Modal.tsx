@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { useFocusTrap } from '@/lib/ui/useFocusTrap'
 import type { Saber11Detail } from '@/lib/api/saber11'
 import { loadSaber11, readCachedSaber11 } from '@/lib/schools/saber11Cache'
+import { Saber11AreaBreakdown } from '@/lib/api/saber11'
 
 type Saber11ModalProps = {
   codDane: string
@@ -18,6 +19,32 @@ type Saber11ModalBodyProps = {
   isLoading: boolean
   error: string | null
   detail: Saber11Detail | null
+}
+
+const AREA_DISPLAY_ORDER = [
+  'Matemáticas',
+  'Lectura Crítica',
+  'Ciencias Naturales',
+  'Sociales y Ciudadanas',
+]
+
+type DisplayArea = Saber11AreaBreakdown & { displayName: string }
+
+function resolveAreasForDisplay(areas: Saber11AreaBreakdown[]): DisplayArea[] {
+  const withDisplayName = areas.map((area) => {
+    const canonicalIndex = AREA_DISPLAY_ORDER.findIndex(
+      (canonical) => canonical.toLowerCase() === area.area.toLowerCase()
+    )
+    const displayName = canonicalIndex === -1 ? area.area : AREA_DISPLAY_ORDER[canonicalIndex]
+    return { ...area, displayName, sortIndex: canonicalIndex === -1 ? AREA_DISPLAY_ORDER.length : canonicalIndex }
+  })
+
+  return withDisplayName.sort((a, b) => a.sortIndex - b.sortIndex)
+}
+
+function formatIncorrectPercentage(value: number | null): string {
+  if (value === null) return '—'
+  return `${(value * 100).toFixed(1)}%`
 }
 
 function Saber11ModalBody({ isLoading, error, detail }: Saber11ModalBodyProps) {
@@ -60,6 +87,28 @@ function Saber11ModalBody({ isLoading, error, detail }: Saber11ModalBodyProps) {
           <p className="saber11-clasificacion">{detail.clasificacion}</p>
         </>
       )}
+
+      <div className="saber11-incorrectas-section">
+        <div className="saber11-section-title">Respuestas incorrectas por área</div>
+        <table className="saber11-area-table">
+          <thead>
+            <tr>
+              <th className="saber11-area-table__area-header">Área</th>
+              <th>IE</th>
+              <th>Colombia</th>
+            </tr>
+          </thead>
+          <tbody>
+            {resolveAreasForDisplay(detail.incorrectas_por_area).map((area) => (
+              <tr key={area.area}>
+                <td className="saber11-area-table__area">{area.displayName}</td>
+                <td>{formatIncorrectPercentage(area.incorrectas_ee)}</td>
+                <td>{formatIncorrectPercentage(area.incorrectas_colombia)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </>
   )
 }

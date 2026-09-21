@@ -1,5 +1,11 @@
 const SCHOOLS_PATH = '/api/school'
 
+export type Saber11AreaBreakdown = {
+  area: string
+  incorrectas_ee: number | null
+  incorrectas_colombia: number | null
+}
+
 export type Saber11Detail = {
   cod_dane: string
   promedio: number | null
@@ -7,6 +13,7 @@ export type Saber11Detail = {
   promedio_nacional: number | null
   publicados_nacional: number | null
   clasificacion: string | null
+  incorrectas_por_area: Saber11AreaBreakdown[]
 }
 
 export async function fetchSaber11Detail(codDane: string): Promise<Saber11Detail> {

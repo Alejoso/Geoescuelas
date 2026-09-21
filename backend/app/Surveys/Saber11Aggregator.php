@@ -11,10 +11,8 @@ final class Saber11Aggregator
     private const INSTITUTION_TABLE = 'ficha_alumnos_icfes';
     private const NATIONAL_TABLE = 'ficha_alumnos_icfes_colombia_medellin';
     private const CLASSIFICATION_TABLE = 'clasificacion_ie_icfes';
+    private const INCORRECT_ANSWERS_TABLE = 'respuestas_incorrectas_icfes';
 
-    // Hardcoded to this year's results, same choice as the materialized
-    // view's dynamic "año > 2024" filter was meant to avoid — this one is
-    // intentionally pinned and will need bumping when 2026 data lands.
     private const YEAR = 2025;
 
     private const NATIONAL_SCOPE_COLUMN = 'colombia/medellin';
@@ -27,6 +25,7 @@ final class Saber11Aggregator
      *     promedioNacional: float|null,
      *     publicadosNacional: int|null,
      *     clasificacion: string|null,
+     *     incorrectasPorArea: list<array{area: string, incorrectasEe: float|null, incorrectasColombia: float|null}>,
      * }
      */
     public static function summaryForInstitution(string $codDane): array
@@ -41,6 +40,7 @@ final class Saber11Aggregator
             'promedioNacional' => self::toFloatOrNull($national?->promedio),
             'publicadosNacional' => self::toIntOrNull($national?->publicados),
             'clasificacion' => $classification?->clasificacion,
+            'incorrectasPorArea' => self::incorrectAnswersByArea($codDane),
         ];
     }
 
@@ -72,6 +72,32 @@ final class Saber11Aggregator
             ->where('año', self::YEAR)
             ->select('clasificacion')
             ->first();
+    }
+
+    /**
+     * Averages incorrectas (ee) and incorrectas (colombia) across every
+     * competencia / aprendizaje especifico row, grouped up to the four areas.
+     * This table has no año column, so unlike the others it isn't scoped by
+     * YEAR — per your note, it only ever holds the latest year's data.
+     *
+     * @return list<array{area: string, incorrectasEe: float|null, incorrectasColombia: float|null}>
+     */
+    private static function incorrectAnswersByArea(string $codDane): array
+    {
+        $rows = DB::connection(self::CONNECTION)
+            ->table(self::INCORRECT_ANSWERS_TABLE)
+            ->where('codigo dane', $codDane)
+            ->select('area')
+            ->selectRaw('AVG("incorrectas (ee)") as incorrectas_ee')
+            ->selectRaw('AVG("incorrectas (colombia)") as incorrectas_colombia')
+            ->groupBy('area')
+            ->get();
+
+        return $rows->map(static fn ($row) => [
+            'area' => $row->area,
+            'incorrectasEe' => self::toFloatOrNull($row->incorrectas_ee),
+            'incorrectasColombia' => self::toFloatOrNull($row->incorrectas_colombia),
+        ])->all();
     }
 
     private static function toFloatOrNull(mixed $value): ?float

@@ -23,6 +23,11 @@ class Saber11Resource extends JsonResource
             'promedio_nacional' => $result['promedioNacional'],
             'publicados_nacional' => $result['publicadosNacional'],
             'clasificacion' => $result['clasificacion'],
+            'incorrectas_por_area' => array_map(static fn (array $item): array => [
+                'area' => $item['area'],
+                'incorrectas_ee' => $item['incorrectasEe'],
+                'incorrectas_colombia' => $item['incorrectasColombia'],
+            ], $result['incorrectasPorArea']),
         ];
     }
 }
