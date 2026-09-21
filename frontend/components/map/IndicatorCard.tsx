@@ -1,5 +1,4 @@
-import { SCORE_MAX_LABEL } from '@/lib/schools/indicators'
-import type { IndicatorView } from '@/lib/schools/indicators'
+import type { DisplayMode, IndicatorView } from '@/lib/schools/indicators'
 
 const DETAIL_TOOLTIP_LABEL = 'Ver subindicadores'
 const NO_DATA_ACCENT_COLOR = 'rgba(255, 255, 255, 0.15)'
@@ -8,6 +7,7 @@ type IndicatorCardProps = IndicatorView & {
   // Omitted when the indicator has no survey behind it, and by the modal's own
   // cards so they cannot reopen the modal they live in.
   onOpenSurvey?: () => void
+  displayMode: DisplayMode
 }
 
 function EyeIcon() {
@@ -32,12 +32,20 @@ function EyeIcon() {
 export default function IndicatorCard({
   label,
   scoreText,
+  percentageText,
   respondentsText,
   tierLabel,
   color,
+  maxLabel,
+  displayMode,
   onOpenSurvey,
 }: IndicatorCardProps) {
   const accentColor = color ?? NO_DATA_ACCENT_COLOR
+
+  // Saber 11 (and any unmeasured indicator) has no percentage form, so it
+  // always shows its raw score regardless of the panel's chosen mode.
+  const showsPercentage = displayMode === 'percentage' && percentageText !== null
+  const primaryText = showsPercentage ? percentageText : scoreText
 
   return (
     <div className="indicator-card" style={{ borderLeftColor: accentColor }}>
@@ -52,9 +60,9 @@ export default function IndicatorCard({
 
       <div className="indicator-card__score">
         <span className="indicator-card__value" style={{ color: color ?? undefined }}>
-          {scoreText}
+          {primaryText}
         </span>
-        <span className="indicator-card__max">/ {SCORE_MAX_LABEL}</span>
+        {!showsPercentage && <span className="indicator-card__max">/ {maxLabel}</span>}
 
         {onOpenSurvey && (
           <button

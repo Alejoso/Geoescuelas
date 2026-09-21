@@ -23,8 +23,8 @@ export type School = {
   indice_global_docentes: number | null
   docentes_encuestados_cd: number | null
 
-  indice_global_icfes: number | null
-  encuestados_icfes: number | null
+  indice_global_saber_11: number | null
+  encuestados_saber_11: number | null
 
   indice_global_estudiantes: number | null
   encuestados_estudiantes: number | null

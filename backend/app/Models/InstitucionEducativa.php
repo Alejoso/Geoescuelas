@@ -21,8 +21,8 @@ class InstitucionEducativa extends Model
         'docentes_encuestados_stem'    => 'integer',
         'indice_global_docentes'       => 'float',
         'docentes_encuestados_cd'      => 'integer',
-        'indice_global_icfes'          => 'float',
-        'encuestados_icfes'            => 'integer',
+        'indice_global_saber_11'       => 'float',
+        'encuestados_saber_11'         => 'integer',
         'indice_global_estudiantes'    => 'float',
         'encuestados_estudiantes'      => 'integer',
         'indice_global_ciberseguridad' => 'float',
@@ -151,14 +151,14 @@ class InstitucionEducativa extends Model
 
     public function getIndiceGlobalIcfes(): ?float
     {
-        $value = $this->getAttribute('indice_global_icfes');
+        $value = $this->getAttribute('indice_global_saber_11');
 
         return $value === null ? null : (float) $value;
     }
 
     public function getEncuestadosIcfes(): ?int
     {
-        $value = $this->getAttribute('encuestados_icfes');
+        $value = $this->getAttribute('encuestados_saber_11');
 
         return $value === null ? null : (int) $value;
     }

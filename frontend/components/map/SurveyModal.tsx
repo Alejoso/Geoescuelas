@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import IndicatorCard from './IndicatorCard'
-import { toIndicatorView } from '@/lib/schools/indicators'
+import { toIndicatorView, type DisplayMode } from '@/lib/schools/indicators'
 import { useFocusTrap } from '@/lib/ui/useFocusTrap'
 import type { RespondentNoun, SurveyDefinition, SurveyResult } from '@/lib/surveys/types'
 import { loadSurvey, readCachedSurvey } from '@/lib/surveys/cache'
@@ -9,6 +9,7 @@ import { loadSurvey, readCachedSurvey } from '@/lib/surveys/cache'
 type SurveyModalProps = {
   codDane: string
   survey: SurveyDefinition
+  displayMode: DisplayMode
   onClose: () => void
 }
 
@@ -22,9 +23,10 @@ type SurveyModalBodyProps = {
   error: string | null
   result: SurveyResult | null
   respondentNoun: RespondentNoun
+  displayMode: DisplayMode
 }
 
-function SurveyModalBody({ isLoading, error, result, respondentNoun }: SurveyModalBodyProps) {
+function SurveyModalBody({ isLoading, error, result, respondentNoun, displayMode }: SurveyModalBodyProps) {
   if (isLoading) return <p className="survey-modal__status">Cargando…</p>
   if (error !== null) return <p className="survey-modal__status">{error}</p>
   if (result === null) return null
@@ -45,14 +47,14 @@ function SurveyModalBody({ isLoading, error, result, respondentNoun }: SurveyMod
       <p className="survey-modal__respondents">Basado en {respondentsText}</p>
       <div className="indicator-list">
         {indicatorViews.map(view => (
-          <IndicatorCard key={view.label} {...view} />
+          <IndicatorCard key={view.label} {...view} displayMode={displayMode} />
         ))}
       </div>
     </>
   )
 }
 
-export default function SurveyModal({ codDane, survey, onClose }: SurveyModalProps) {
+export default function SurveyModal({ codDane, survey, displayMode, onClose }: SurveyModalProps) {
   // Read synchronously so a prefetched survey renders on the first frame.
   const cachedResult = readCachedSurvey(survey, codDane)
 
@@ -146,6 +148,7 @@ export default function SurveyModal({ codDane, survey, onClose }: SurveyModalPro
             error={error}
             result={result}
             respondentNoun={survey.respondentNoun}
+            displayMode={displayMode}
           />
         </div>
 

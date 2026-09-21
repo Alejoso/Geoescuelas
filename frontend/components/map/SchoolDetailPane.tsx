@@ -2,14 +2,19 @@
 
 import { useEffect, useState } from 'react'
 import type { School } from '@/lib/api/schools'
-import { buildIndicatorViews, SCORE_MAX_LABEL } from '@/lib/schools/indicators'
+import { buildIndicatorViews, type DisplayMode } from '@/lib/schools/indicators'
 import { buildInfoGroups } from '@/lib/schools/info'
 
 import IndicatorCard from './IndicatorCard'
 import SurveyModal from './SurveyModal'
-import {SURVEYS_BY_INDICATOR } from '@/lib/surveys/definitions'
+import CiberseguridadModal from './CiberseguridadModal'
+import { SURVEYS_BY_INDICATOR } from '@/lib/surveys/definitions'
 import type { SurveyDefinition } from '@/lib/surveys/types'
 import { prefetchSurveys } from '@/lib/surveys/cache'
+import { loadCiberseguridad } from '@/lib/schools/ciberseguridadCache'
+
+import Saber11Modal from './Saber11Modal'
+import { loadSaber11 } from '@/lib/schools/saber11Cache'
 
 type TabId = 'indicators' | 'info'
 
@@ -18,43 +23,46 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'info', label: 'Información IE' },
 ]
 
+// Indicators whose detail view isn't a numeric-survey breakdown get their own
+// entry here instead of SURVEYS_BY_INDICATOR.
+const CIBERSEGURIDAD_INDICATOR_ID = 'ciberseguridad'
+const SABER_11_INDICATOR_ID = 'saber_11'
+
 type SchoolDetailPaneProps = {
   school: School | null
   onClose: () => void
 }
 
 export default function SchoolDetailPane({ school, onClose }: SchoolDetailPaneProps) {
-  // The school kept on screen. Outlives `school` going null so the pane can
-  // finish sliding out before it unmounts.
   const [renderedSchool, setRenderedSchool] = useState<School | null>(school)
-  // True while the exit animation is playing. Selects the closing keyframes.
   const [isClosing, setIsClosing] = useState(false)
-  // Survives school changes on purpose: browsing the same tab across schools
-  // is the common case.
   const [activeTab, setActiveTab] = useState<TabId>('indicators')
-  // Cleared when the school changes so a modal never outlives the school it
-  // was opened from.
+  const [displayMode, setDisplayMode] = useState<DisplayMode>('percentage')
   const [activeSurvey, setActiveSurvey] = useState<SurveyDefinition | null>(null)
+  // Separate from activeSurvey since it opens a different modal shape
+  // (histogram + counts, not a numeric-indicator list).
+  const [isCiberseguridadOpen, setIsCiberseguridadOpen] = useState(false)
+  const [isSaber11Open, setIsSaber11Open] = useState(false)
 
   useEffect(() => {
     if (school) {
-      // Opening, or switching to another school: show it, cancel any close.
       setRenderedSchool(school)
       setIsClosing(false)
       setActiveSurvey(null)
+      setIsCiberseguridadOpen(false)
+      setIsSaber11Open(false)
     } else {
-      // Closing: keep current content mounted and play the exit animation.
       setIsClosing(true)
       setActiveSurvey(null)
+      setIsCiberseguridadOpen(false)
+      setIsSaber11Open(false)
     }
   }, [school])
 
   if (!renderedSchool) return null
 
   function handleAnimationEnd(event: React.AnimationEvent<HTMLElement>) {
-    // Ignore animations bubbling up from children.
     if (event.target !== event.currentTarget) return
-    // Unmount only after the closing animation, never the opening one.
     if (isClosing) {
       setRenderedSchool(null)
       setIsClosing(false)
@@ -105,7 +113,14 @@ export default function SchoolDetailPane({ school, onClose }: SchoolDetailPanePr
 
         <div className="school-pane__body">
           {activeTab === 'indicators' ? (
-            <IndicatorsPanel school={renderedSchool} onOpenSurvey={setActiveSurvey} />
+            <IndicatorsPanel
+              school={renderedSchool}
+              onOpenSurvey={setActiveSurvey}
+              onOpenCiberseguridad={() => setIsCiberseguridadOpen(true)}
+              onOpenSaber11={() => setIsSaber11Open(true)}
+              displayMode={displayMode}
+              onDisplayModeChange={setDisplayMode}
+            />
           ) : (
             <InfoPanel school={renderedSchool} />
           )}
@@ -116,7 +131,22 @@ export default function SchoolDetailPane({ school, onClose }: SchoolDetailPanePr
         <SurveyModal
           codDane={renderedSchool.cod_dane}
           survey={activeSurvey}
+          displayMode={displayMode}
           onClose={() => setActiveSurvey(null)}
+        />
+      )}
+
+      {isCiberseguridadOpen && (
+        <CiberseguridadModal
+          codDane={renderedSchool.cod_dane}
+          onClose={() => setIsCiberseguridadOpen(false)}
+        />
+      )}
+
+      {isSaber11Open && (
+        <Saber11Modal
+          codDane={renderedSchool.cod_dane}
+          onClose={() => setIsSaber11Open(false)}
         />
       )}
     </>
@@ -126,42 +156,119 @@ export default function SchoolDetailPane({ school, onClose }: SchoolDetailPanePr
 type IndicatorsPanelProps = {
   school: School
   onOpenSurvey: (survey: SurveyDefinition) => void
+  onOpenCiberseguridad: () => void
+  onOpenSaber11: () => void
+  displayMode: DisplayMode
+  onDisplayModeChange: (mode: DisplayMode) => void
 }
 
-function IndicatorsPanel({ school, onOpenSurvey }: IndicatorsPanelProps) {
+type CardDetail =
+  | { kind: 'survey'; survey: SurveyDefinition }
+  | { kind: 'ciberseguridad' }
+  | { kind: 'saber11' }
+  | null
+
+function IndicatorsPanel({
+  school,
+  onOpenSurvey,
+  onOpenCiberseguridad,
+  onOpenSaber11,
+  displayMode,
+  onDisplayModeChange,
+}: IndicatorsPanelProps) {
   const indicators = buildIndicatorViews(school)
 
-  // Paired up once so the survey lookup is not repeated between the prefetch
-  // list and the render below.
-  const cards = indicators.map(indicator => {
-    const survey = SURVEYS_BY_INDICATOR[indicator.id]
-    const isOpenable = indicator.isMeasured && survey !== undefined
+  function detailFor(indicator: ReturnType<typeof buildIndicatorViews>[number]): CardDetail {
+    if (!indicator.isMeasured) return null
 
-    return { indicator, survey: isOpenable ? survey : null }
-  })
+    if (indicator.id === CIBERSEGURIDAD_INDICATOR_ID) {
+      return { kind: 'ciberseguridad' }
+    }
+
+    if (indicator.id === SABER_11_INDICATOR_ID) {
+      return { kind: 'saber11' }
+    }
+
+    const survey = SURVEYS_BY_INDICATOR[indicator.id]
+    return survey ? { kind: 'survey', survey } : null
+  }
+
+  const cards = indicators.map(indicator => ({
+    indicator,
+    detail: detailFor(indicator),
+  }))
 
   const openableSurveys: SurveyDefinition[] = []
+  let isCiberseguridadOpenable = false
+  let isSaber11Openable = false
 
   for (const card of cards) {
-    if (card.survey !== null) {
-      openableSurveys.push(card.survey)
+    if (card.detail?.kind === 'survey') {
+      openableSurveys.push(card.detail.survey)
+    } else if (card.detail?.kind === 'ciberseguridad') {
+      isCiberseguridadOpenable = true
+    } else if (card.detail?.kind === 'saber11') {
+      isSaber11Openable = true
     }
   }
 
-  function handleOpenSurvey(survey: SurveyDefinition) {
-    // The user has shown intent on this school, so warm the rest while they
-    // read the first one.
+  function warmDetailCache() {
     prefetchSurveys(openableSurveys, school.cod_dane)
-    onOpenSurvey(survey)
+
+    if (isCiberseguridadOpenable) {
+      loadCiberseguridad(school.cod_dane).catch(() => {})
+    }
+
+    if (isSaber11Openable) {
+      loadSaber11(school.cod_dane).catch(() => {})
+    }
+  }
+
+  function handleOpenDetail(detail: CardDetail) {
+    if (detail === null) return
+
+    warmDetailCache()
+
+    if (detail.kind === 'survey') {
+      onOpenSurvey(detail.survey)
+    } else if (detail.kind === 'ciberseguridad') {
+      onOpenCiberseguridad()
+    } else {
+      onOpenSaber11()
+    }
   }
 
   return (
     <div className="indicator-list">
-      {cards.map(({ indicator, survey }) => (
+      <div className="indicator-list__mode-toggle" role="group" aria-label="Formato de puntaje">
+        <button
+          type="button"
+          className={`indicator-list__mode-button ${
+            displayMode === 'percentage' ? 'indicator-list__mode-button--active' : ''
+          }`}
+          aria-pressed={displayMode === 'percentage'}
+          onClick={() => onDisplayModeChange('percentage')}
+        >
+          %
+        </button>
+        <button
+          type="button"
+          className={`indicator-list__mode-button ${
+            displayMode === 'raw' ? 'indicator-list__mode-button--active' : ''
+          }`}
+          aria-pressed={displayMode === 'raw'}
+          onClick={() => onDisplayModeChange('raw')}
+        >
+          Valor
+        </button>
+      </div>
+
+      {cards.map(({ indicator, detail }) => (
         <IndicatorCard
           key={indicator.id}
           {...indicator}
-          onOpenSurvey={survey ? () => handleOpenSurvey(survey) : undefined}
+          onOpenSurvey={detail ? () => handleOpenDetail(detail) : undefined}
+          displayMode={displayMode}
         />
       ))}
     </div>
